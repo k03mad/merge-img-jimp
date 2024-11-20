@@ -1,6 +1,6 @@
 {
   "name": "@k03mad/merge-img-jimp",
-  "version": "4.1.0",
+  "version": "4.2.0",
   "description": "Merge multiple images into a single image",
   "author": "Plusb Preco <plusb21@gmail.com>",
   "maintainers": [
@@ -20,7 +20,7 @@
     "node": ">=22"
   },
   "dependencies": {
-    "jimp": "0.22.0"
+    "jimp": "0.22.12"
   },
   "devDependencies": {
     "@k03mad/eslint-config": "27.0.0",
