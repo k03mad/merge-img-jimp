@@ -1,6 +1,6 @@
 {
   "name": "@k03mad/merge-img-jimp",
-  "version": "3.0.1",
+  "version": "3.2.0",
   "description": "Merge multiple images into a single image",
   "author": "Plusb Preco <plusb21@gmail.com>",
   "maintainers": [
@@ -24,7 +24,6 @@
   },
   "devDependencies": {
     "@k03mad/eslint-config": "27.0.0",
-    "@k03mad/simple-log": "5.1.0",
     "eslint": "9.15.0",
     "husky": "9.1.7",
     "npm-run-all": "4.1.5"
@@ -32,7 +31,7 @@
   "scripts": {
     "lint": "npm run lint:eslint",
     "lint:eslint": "eslint ./ --cache",
-    "test": "node test/spec",
+    "test": "node --test test/*.js",
     "clean": "rm -rf ./node_modules .eslintcache || true",
     "setup": "npm run clean && npm run setup:pnpm",
     "setup:pnpm": "npm i pnpm -g && pnpm i",

@@ -1,8 +1,5 @@
 import Jimp from 'jimp';
 
-import alignImage from './utils/alignImage.js';
-import calcMargin from './utils/calcMargin.js';
-
 const isPlainObj = value => {
     if (typeof value !== 'object' || value === null) {
         return false;
@@ -46,14 +43,51 @@ const countTotalReduce = (imgData, type, offset) => imgData.reduce(
     0,
 );
 
+const calcMargin = (obj = {}) => {
+    if (Number.isInteger(obj)) {
+        return {
+            top: obj,
+            right: obj,
+            bottom: obj,
+            left: obj,
+        };
+    }
+
+    if (typeof obj === 'string') {
+        const [top, right = top, bottom = top, left = right] = obj.split(' ');
+
+        return {
+            top: Number(top),
+            right: Number(right),
+            bottom: Number(bottom),
+            left: Number(left),
+        };
+    }
+
+    const {top = 0, right = 0, bottom = 0, left = 0} = obj;
+    return {top, right, bottom, left};
+};
+
+const alignImage = (total, size, align) => {
+    if (align === 'center') {
+        return (total - size) / 2;
+    }
+
+    if (align === 'end') {
+        return total - size;
+    }
+
+    return 0;
+};
+
 /**
- * @param {Array} images
- * @param {object} opts
+ * @param {Array<string|{src:string|Buffer,offsetX?:number,offsetY?:number}|Buffer|Jimp>} images
+ * @param {object} [opts]
  * @param {boolean} [opts.direction]
  * @param {number} [opts.color]
- * @param {string} [opts.align]
+ * @param {'start'|'center'|'end'} [opts.align]
  * @param {number} [opts.offset]
- * @param {number} [opts.margin]
+ * @param {string|number|{top:string|number,right:string|number,bottom:string|number,left:string|number}} [opts.margin]
  */
 export default async (images, {
     direction = false,
@@ -63,11 +97,11 @@ export default async (images, {
     margin,
 } = {}) => {
     if (!Array.isArray(images)) {
-        throw new TypeError('"images" must be an array with images');
+        throw new TypeError('First arg should be an array with images');
     }
 
     if (images.length <= 1) {
-        throw new Error('"images" must contain more than one image');
+        throw new Error('First arg array must contain more than one image');
     }
 
     const imgs = await Promise.all(images.map(processImg));
