@@ -126,14 +126,19 @@ const tests = [
 
 describe('merge', () => {
     tests.forEach(test => {
-        const name = JSON.stringify(test);
+        const name = JSON.stringify({
+            ...test,
+            // arrayImages: Buffer.isBuffer(test.arrayImages?.src)
+            //     ? {src: '<buffer>'}
+            //     : test.arrayImages,
+        });
 
         let merged;
 
         it(`[merge]\n${name}`, async () => {
             merged = await mergeImg(
                 test.arrayImages
-                    ? Array.from({length: MERGE_COUNT}, () => ({...test.arrayImages, src: PICTURE_PATH}))
+                    ? Array.from({length: MERGE_COUNT}, () => ({src: PICTURE_PATH, ...test.arrayImages}))
                     : Array.from({length: MERGE_COUNT}, () => PICTURE_PATH),
                 test.opts,
             );
