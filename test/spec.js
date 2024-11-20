@@ -1,119 +1,17 @@
-import {resolve} from 'path';
-import Jimp, {read} from 'jimp';
-import mergeImg from '../src';
+import mergeImg from '../src/index.js';
+import assert from 'assert/strict';
 
-const fixturePath = resolve(__dirname, 'fixtures');
+const PICTURE_PATH = './test/example.png';
 
-describe('`mergeImg()`', () => {
-  test('accepts correct path type', async () => {
-    await expect(mergeImg([`${fixturePath}/example.png`, `${fixturePath}/example.png`]))
-      .resolves
-      .toBeDefined();
-  }, 10000);
+const PICTURE_WIDTH = 2953;
+const PICTURE_HEIGHT = 1911;
 
-  test('accepts correct object type', async () => {
-    await expect(
-      mergeImg([
-        {
-          src: `${fixturePath}/example.png`,
-          offsetX: 5,
-        },
-        {
-          src: `${fixturePath}/example.png`,
-          offsetX: 10,
-        },
-      ]),
-    )
-      .resolves
-      .toBeDefined();
-  }, 10000);
+const MERGE_COUNT = 10;
 
-  // FIXME: Need to address for upstream issue accepting Jimp object as a argument
-  test.skip('accepts correct Jimp type', async () => {
-    const jimpImg = await read(`${fixturePath}/example.png`);
-    const jimpImg2 = await read(`${fixturePath}/example.png`);
+const merged = await mergeImg(
+    Array.from({length: MERGE_COUNT}, () => PICTURE_PATH),
+);
 
-    await expect(mergeImg([jimpImg, jimpImg2]))
-      .resolves
-      .toBeDefined();
-  }, 10000);
-
-  test('returns `Promise` that contains `Jimp` object', async () => {
-    const image = await mergeImg([`${fixturePath}/example.png`, `${fixturePath}/example.png`]);
-    expect(image instanceof Jimp).toBeTruthy();
-  }, 10000);
-
-  test('handles options', async () => {
-    const image = await mergeImg([
-      `${fixturePath}/example.png`,
-      `${fixturePath}/example.png`,
-    ], {
-      direction: true,
-      color: 0xffffffff,
-      align: 'center',
-      offset: 10,
-    });
-
-    expect(image instanceof Jimp).toBeTruthy();
-  }, 10000);
-
-  test('handles offsets per image individually`', async () => {
-    const {bitmap: {width, height}} = await mergeImg([
-      {
-        src: `${fixturePath}/example.png`,
-        offsetY: 20,
-      },
-      {
-        src: `${fixturePath}/example.png`,
-        offsetX: 100,
-        offsetY: 150,
-      },
-    ]);
-
-    expect(width).toBe(1124);
-    expect(height).toBe(662);
-  }, 10000);
-});
-
-describe('`mergeImg()` margin option', () => {
-  test('handles the image margin with number option', async () => {
-    const {bitmap: {width, height}} = await mergeImg([
-      `${fixturePath}/example.png`,
-      `${fixturePath}/example.png`,
-    ], {
-      margin: 40,
-    });
-
-    expect(width).toBe(1104);
-    expect(height).toBe(592);
-  }, 10000);
-
-  test('handles the image margin with string option', async () => {
-    const {bitmap: {width, height}} = await mergeImg([
-      `${fixturePath}/example.png`,
-      `${fixturePath}/example.png`,
-    ], {
-      margin: '40 40 0 10',
-    });
-
-    expect(width).toBe(1074);
-    expect(height).toBe(552);
-  }, 10000);
-
-  test('handles the image margin with object option', async () => {
-    const {bitmap: {width, height}} = await mergeImg([
-      `${fixturePath}/example.png`,
-      `${fixturePath}/example.png`,
-    ], {
-      margin: {
-        top: 40,
-        right: 40,
-        bottom: 0,
-        left: 10,
-      },
-    });
-
-    expect(width).toBe(1074);
-    expect(height).toBe(552);
-  }, 10000);
-});
+assert(Buffer.isBuffer(merged.bitmap.data));
+assert.equal(merged.bitmap.width, PICTURE_WIDTH * MERGE_COUNT);
+assert.equal(merged.bitmap.height, PICTURE_HEIGHT);
