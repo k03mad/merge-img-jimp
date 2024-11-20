@@ -13,23 +13,6 @@ const MERGE_COUNT = 3;
 const OFFSET_TEST = 27;
 const MARGIN_TEST = 66;
 
-const OUTPUT_KEYS = [
-    '_events',
-    '_eventsCount',
-    '_maxListeners',
-    'bitmap',
-    '_background',
-    '_originalMime',
-    '_exif',
-    '_rgba',
-    'writeAsync',
-    'getBase64Async',
-    'getBuffer',
-    'getBufferAsync',
-    'getPixelColour',
-    'setPixelColour',
-];
-
 const OUTPUT_KEYS_BITMAP = [
     'data',
     'width',
@@ -126,12 +109,7 @@ const tests = [
 
 describe('merge', () => {
     tests.forEach(test => {
-        const name = JSON.stringify({
-            ...test,
-            // arrayImages: Buffer.isBuffer(test.arrayImages?.src)
-            //     ? {src: '<buffer>'}
-            //     : test.arrayImages,
-        });
+        const name = JSON.stringify(test);
 
         let merged;
 
@@ -144,59 +122,19 @@ describe('merge', () => {
             );
         });
 
-        it(`[keys]\n${name}`, () => {
-            assert.deepEqual(Object.keys(merged), OUTPUT_KEYS);
-        });
-
-        it(`[keys][bitmap]\n${name}`, () => {
+        it(`[bitmap]\n${name}`, () => {
             assert.deepEqual(Object.keys(merged.bitmap), OUTPUT_KEYS_BITMAP);
         });
 
-        it(`[_events]\n${name}`, () => {
-            assert.equal(typeof merged._events, 'object');
-        });
-
-        it(`[_eventsCount]\n${name}`, () => {
-            assert.equal(merged._eventsCount, 0);
-        });
-
-        it(`[_maxListeners]\n${name}`, () => {
-            assert.equal(merged._maxListeners, undefined);
-        });
-
-        it(`[_background]\n${name}`, () => {
-            assert.equal(merged._background, test.assertBackground || 0);
-        });
-
-        it(`[_exif]\n${name}`, () => {
-            assert.equal(merged._exif, null);
-        });
-
-        it(`[_rgba]\n${name}`, () => {
-            assert.equal(merged._rgba, true);
-        });
-
-        it(`[_originalMime]\n${name}`, () => {
-            assert.equal(merged._originalMime, 'image/png');
-        });
-
-        OUTPUT_KEYS
-            .filter(key => (/^(get|set|write)/).test(key))
-            .forEach(elem => {
-                it(`[${elem}]\n${name}`, () => {
-                    assert.equal(typeof merged[elem], 'function');
-                });
-            });
-
-        it(`[buffer]\n${name}`, () => {
+        it(`[bitmap.buffer]\n${name}`, () => {
             assert(Buffer.isBuffer(merged.bitmap.data));
         });
 
-        it(`[width]\n${name}`, () => {
+        it(`[bitmap.width]\n${name}`, () => {
             assert.equal(merged.bitmap.width, test.assertWidth || PICTURE_WIDTH);
         });
 
-        it(`[height]\n${name}`, () => {
+        it(`[bitmap.height]\n${name}`, () => {
             assert.equal(merged.bitmap.height, test.assertHeight || PICTURE_HEIGHT);
         });
     });

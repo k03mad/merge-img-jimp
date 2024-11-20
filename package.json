@@ -1,6 +1,6 @@
 {
   "name": "@k03mad/merge-img-jimp",
-  "version": "4.0.0",
+  "version": "4.1.0",
   "description": "Merge multiple images into a single image",
   "author": "Plusb Preco <plusb21@gmail.com>",
   "maintainers": [
