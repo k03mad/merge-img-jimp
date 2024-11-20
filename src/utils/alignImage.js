@@ -1,4 +1,9 @@
-export default function alignImage(total, size, align) {
+/**
+ * @param {number} total
+ * @param {number} size
+ * @param {string} align
+ */
+export default (total, size, align) => {
     if (align === 'center') {
         return (total - size) / 2;
     }
@@ -8,4 +13,4 @@ export default function alignImage(total, size, align) {
     }
 
     return 0;
-}
+};

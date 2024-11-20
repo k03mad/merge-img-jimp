@@ -1,4 +1,5 @@
 import Jimp from 'jimp';
+
 import alignImage from './utils/alignImage.js';
 import calcMargin from './utils/calcMargin.js';
 
@@ -9,153 +10,119 @@ const isPlainObj = value => {
 
     const prototype = Object.getPrototypeOf(value);
     return (
-        (prototype === null ||
-            prototype === Object.prototype ||
-            Object.getPrototypeOf(prototype) === null) &&
-        !(Symbol.toStringTag in value) &&
-        !(Symbol.iterator in value)
+        (prototype === null || prototype === Object.prototype || Object.getPrototypeOf(prototype) === null)
+        && !(Symbol.toStringTag in value)
+        && !(Symbol.iterator in value)
     );
 };
 
-const processImg = img => {
-  if (img instanceof Jimp) {
-      return {img};
-  }
+const processImg = async img => {
+    if (img instanceof Jimp) {
+        return {img};
+    }
 
-  if (isPlainObj(img)) {
-      const {src, offsetX, offsetY} = img;
+    if (isPlainObj(img)) {
+        const {src, offsetX, offsetY} = img;
 
-      return Jimp.read(src).then(imgObj => ({
-          img: imgObj,
-          offsetX,
-          offsetY,
-      }));
-  }
+        return {
+            img: await Jimp.read(src),
+            offsetX,
+            offsetY,
+        };
+    }
 
-  return Jimp.read(img).then(imgObj => ({img: imgObj}));
+    return {img: await Jimp.read(img)};
 };
 
-export default function mergeImg(
-    images,
-    {
-        direction = false,
-        color = 0x00000000,
-        align = 'start',
-        offset = 0,
-        margin,
-    } = {},
-) {
+const countTotalMax = (imgData, type) => Math.max(
+    ...imgData.map(({img: {bitmap}, offsetX}) => bitmap[type] + offsetX),
+);
+
+const countTotalReduce = (imgData, type, offset) => imgData.reduce(
+    (res, {img: {bitmap}, offsetY}, index) => res
+        + bitmap[type]
+        + offsetY
+        + Number(index > 0) * offset,
+    0,
+);
+
+/**
+ * @param {Array} images
+ * @param {object} opts
+ * @param {boolean} [opts.direction]
+ * @param {number} [opts.color]
+ * @param {string} [opts.align]
+ * @param {number} [opts.offset]
+ * @param {number} [opts.margin]
+ */
+export default async (images, {
+    direction = false,
+    color = 0x00_00_00_00,
+    align = 'start',
+    offset = 0,
+    margin,
+} = {}) => {
     if (!Array.isArray(images)) {
-        throw new TypeError('`images` must be an array that contains images');
+        throw new TypeError('"images" must be an array with images');
     }
 
-    if (images.length < 1) {
-        throw new Error('At least `images` must contain more than one image');
+    if (images.length <= 1) {
+        throw new Error('"images" must contain more than one image');
     }
 
-    return Promise.all(images.map(processImg)).then(imgs => {
-        let totalX = 0;
-        let totalY = 0;
+    const imgs = await Promise.all(images.map(processImg));
 
-        const imgData = imgs.reduce((res, {img, offsetX = 0, offsetY = 0}) => {
-            const {
-                bitmap: {width, height},
-            } = img;
+    let totalX = 0;
+    let totalY = 0;
 
-            res.push({
-                img,
-                x: totalX + offsetX,
-                y: totalY + offsetY,
-                offsetX,
-                offsetY,
-            });
+    const imgData = imgs.reduce((res, {
+        img,
+        offsetX = 0,
+        offsetY = 0,
+    }) => {
+        const {bitmap: {width, height}} = img;
 
-            totalX += width + offsetX;
-            totalY += height + offsetY;
+        res.push({
+            img,
+            x: totalX + offsetX,
+            y: totalY + offsetY,
+            offsetX,
+            offsetY,
+        });
 
-            return res;
-        }, []);
+        totalX += width + offsetX;
+        totalY += height + offsetY;
 
-        const {top, right, bottom, left} = calcMargin(margin);
-        const marginTopBottom = top + bottom;
-        const marginRightLeft = right + left;
+        return res;
+    }, []);
 
-        const totalWidth = direction
-            ? Math.max(
-                  ...imgData.map(
-                      ({
-                          img: {
-                              bitmap: {width},
-                          },
-                          offsetX,
-                      }) => width + offsetX,
-                  ),
-              )
-            : imgData.reduce(
-                  (
-                      res,
-                      {
-                          img: {
-                              bitmap: {width},
-                          },
-                          offsetX,
-                      },
-                      index,
-                  ) => res + width + offsetX + Number(index > 0) * offset,
-                  0,
-              );
+    const {top, right, bottom, left} = calcMargin(margin);
+    const marginTopBottom = top + bottom;
+    const marginRightLeft = right + left;
 
-        const totalHeight = direction
-            ? imgData.reduce(
-                  (
-                      res,
-                      {
-                          img: {
-                              bitmap: {height},
-                          },
-                          offsetY,
-                      },
-                      index,
-                  ) => res + height + offsetY + Number(index > 0) * offset,
-                  0,
-              )
-            : Math.max(
-                  ...imgData.map(
-                      ({
-                          img: {
-                              bitmap: {height},
-                          },
-                          offsetY,
-                      }) => height + offsetY,
-                  ),
-              );
+    const totalWidth = direction
+        ? countTotalMax(imgData, 'width')
+        : countTotalReduce(imgData, 'width', offset);
 
-        const baseImage = new Jimp(
-            totalWidth + marginRightLeft,
-            totalHeight + marginTopBottom,
-            color,
-        );
+    const totalHeight = direction
+        ? countTotalReduce(imgData, 'height', offset)
+        : countTotalMax(imgData, 'height');
 
-        // Fallback for `Array#entries()`
-        const imgDataEntries = imgData.map((data, index) => [index, data]);
+    const baseImage = new Jimp(
+        totalWidth + marginRightLeft,
+        totalHeight + marginTopBottom,
+        color,
+    );
 
-        for (const [index, {img, x, y, offsetX, offsetY}] of imgDataEntries) {
-            const {
-                bitmap: {width, height},
-            } = img;
-            const [px, py] = direction
-                ? [
-                      alignImage(totalWidth, width, align) + offsetX,
-                      y + index * offset,
-                  ]
-                : [
-                      x + index * offset,
-                      alignImage(totalHeight, height, align) + offsetY,
-                  ];
+    for (const [index, {img, x, y, offsetX, offsetY}] of imgData.entries()) {
+        const {bitmap: {width, height}} = img;
 
-            baseImage.composite(img, px + left, py + top);
-        }
+        const [px, py] = direction
+            ? [alignImage(totalWidth, width, align) + offsetX, y + index * offset]
+            : [x + index * offset, alignImage(totalHeight, height, align) + offsetY];
 
-        return baseImage;
-    });
-}
+        baseImage.composite(img, px + left, py + top);
+    }
+
+    return baseImage;
+};

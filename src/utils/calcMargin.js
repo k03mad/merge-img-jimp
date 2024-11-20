@@ -1,4 +1,7 @@
-export default function calcMargin(obj = {}) {
+/**
+ * @param {any} obj
+ */
+export default (obj = {}) => {
     if (Number.isInteger(obj)) {
         return {
             top: obj,
@@ -27,4 +30,4 @@ export default function calcMargin(obj = {}) {
         bottom,
         left,
     };
-}
+};
