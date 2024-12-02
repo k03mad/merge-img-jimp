@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+// eslint-disable-next-line n/no-unsupported-features/node-builtins
 import {describe, it} from 'node:test';
 
 import mergeImg from '../src/index.js';

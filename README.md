@@ -2,5 +2,5 @@
 
 ```
 + Updated Jimp
-- Removed babel, tests %)...
+- Removed babel, some tests %)...
 ```

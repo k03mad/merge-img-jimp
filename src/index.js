@@ -1,4 +1,4 @@
-import Jimp from 'jimp';
+import {Jimp} from 'jimp';
 
 const isPlainObj = value => {
     if (typeof value !== 'object' || value === null) {
@@ -142,11 +142,11 @@ export default async (images, {
         ? countTotalReduce(imgData, 'height', offset)
         : countTotalMax(imgData, 'height');
 
-    const baseImage = new Jimp(
-        totalWidth + marginRightLeft,
-        totalHeight + marginTopBottom,
+    const baseImage = new Jimp({
+        width: totalWidth + marginRightLeft,
+        height: totalHeight + marginTopBottom,
         color,
-    );
+    });
 
     for (const [index, {img, x, y, offsetX, offsetY}] of imgData.entries()) {
         const {bitmap: {width, height}} = img;
